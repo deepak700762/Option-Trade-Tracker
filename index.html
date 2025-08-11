@@ -44,24 +44,24 @@
     </table>
 
     <h2>Dashboard</h2>
-    <p><strong>Net PnL:</strong> ₹0</p>
-    <p><strong>Win Rate:</strong> 0%</p>
-    <p><strong>Avg R:</strong> 0</p>
+    <p id="netPnl"><strong>Net PnL:</strong> ₹0</p>
+    <p id="winRate"><strong>Win Rate:</strong> 0%</p>
+    <p id="avgR"><strong>Avg R:</strong> 0</p>
   </div>
 
   <script>
     const form = document.getElementById('tradeForm');
     const table = document.getElementById('tradeTable');
-    const netPnlEl = document.querySelector('p:nth-of-type(1)');
-    const winRateEl = document.querySelector('p:nth-of-type(2)');
-    const avgREl = document.querySelector('p:nth-of-type(3)');
+    const netPnlEl = document.getElementById('netPnl');
+    const winRateEl = document.getElementById('winRate');
+    const avgREl = document.getElementById('avgR');
 
     let trades = [];
 
     form.addEventListener('submit', function(e) {
-      e.preventDefault(); // ✅ Prevent page reload
+      e.preventDefault();
 
-      const symbol = document.getElementById('symbol').value;
+      const symbol = document.getElementById('symbol').value.trim();
       const entry = parseFloat(document.getElementById('entry').value);
       const exit = parseFloat(document.getElementById('exit').value);
       const qty = parseInt(document.getElementById('qty').value);
@@ -69,8 +69,8 @@
 
       if (!symbol || isNaN(entry) || isNaN(exit) || isNaN(qty) || !direction) return;
 
-      let pnl = direction === 'Long' ? (exit - entry) * qty : (entry - exit) * qty;
-      let r = pnl / (Math.abs(entry - exit) * qty);
+      const pnl = direction === 'Long' ? (exit - entry) * qty : (entry - exit) * qty;
+      const r = pnl / (Math.abs(entry - exit) * qty);
 
       const trade = { symbol, entry, exit, qty, direction, pnl, r };
       trades.push(trade);
