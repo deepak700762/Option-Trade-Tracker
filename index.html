@@ -4,29 +4,23 @@
   <meta charset="UTF-8">
   <title>Deepak Options Journal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- ✅ Link to external CSS -->
   <link rel="stylesheet" href="style.css">
-
-  <!-- ✅ Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <!-- ✅ Header -->
   <header>
     Deepak Options Journal
   </header>
 
-  <!-- ✅ Main Container -->
   <div class="container">
     <h2>Add Trade</h2>
     <form id="tradeForm">
-      <input type="text" placeholder="Symbol" required>
-      <input type="number" placeholder="Entry Price" required>
-      <input type="number" placeholder="Exit Price" required>
-      <input type="number" placeholder="Quantity" required>
-      <select required>
+      <input type="text" id="symbol" placeholder="Symbol" required>
+      <input type="number" id="entry" placeholder="Entry Price" required>
+      <input type="number" id="exit" placeholder="Exit Price" required>
+      <input type="number" id="qty" placeholder="Quantity" required>
+      <select id="direction" required>
         <option value="">Direction</option>
         <option value="Long">Long</option>
         <option value="Short">Short</option>
@@ -43,4 +37,70 @@
           <th>Exit</th>
           <th>Qty</th>
           <th>Direction</th>
-          <th
+          <th>PnL</th>
+        </tr>
+      </thead>
+      <tbody id="tradeTable"></tbody>
+    </table>
+
+    <h2>Dashboard</h2>
+    <p><strong>Net PnL:</strong> ₹0</p>
+    <p><strong>Win Rate:</strong> 0%</p>
+    <p><strong>Avg R:</strong> 0</p>
+  </div>
+
+  <script>
+    const form = document.getElementById('tradeForm');
+    const table = document.getElementById('tradeTable');
+    const netPnlEl = document.querySelector('p:nth-of-type(1)');
+    const winRateEl = document.querySelector('p:nth-of-type(2)');
+    const avgREl = document.querySelector('p:nth-of-type(3)');
+
+    let trades = [];
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault(); // ✅ Prevent page reload
+
+      const symbol = document.getElementById('symbol').value;
+      const entry = parseFloat(document.getElementById('entry').value);
+      const exit = parseFloat(document.getElementById('exit').value);
+      const qty = parseInt(document.getElementById('qty').value);
+      const direction = document.getElementById('direction').value;
+
+      if (!symbol || isNaN(entry) || isNaN(exit) || isNaN(qty) || !direction) return;
+
+      let pnl = direction === 'Long' ? (exit - entry) * qty : (entry - exit) * qty;
+      let r = pnl / (Math.abs(entry - exit) * qty);
+
+      const trade = { symbol, entry, exit, qty, direction, pnl, r };
+      trades.push(trade);
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${symbol}</td>
+        <td>${entry}</td>
+        <td>${exit}</td>
+        <td>${qty}</td>
+        <td>${direction}</td>
+        <td style="color:${pnl >= 0 ? 'lime' : 'red'}">₹${pnl.toFixed(2)}</td>
+      `;
+      table.appendChild(row);
+
+      updateDashboard();
+      form.reset();
+    });
+
+    function updateDashboard() {
+      const totalPnl = trades.reduce((sum, t) => sum + t.pnl, 0);
+      const wins = trades.filter(t => t.pnl > 0).length;
+      const winRate = trades.length ? (wins / trades.length) * 100 : 0;
+      const avgR = trades.length ? trades.reduce((sum, t) => sum + t.r, 0) / trades.length : 0;
+
+      netPnlEl.innerHTML = `<strong>Net PnL:</strong> ₹${totalPnl.toFixed(2)}`;
+      winRateEl.innerHTML = `<strong>Win Rate:</strong> ${winRate.toFixed(1)}%`;
+      avgREl.innerHTML = `<strong>Avg R:</strong> ${avgR.toFixed(2)}`;
+    }
+  </script>
+
+</body>
+</html>
