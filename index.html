@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Option Trade Tracker</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Crect width='100%25' height='100%25' fill='%23111'/%3E%3Ctext x='50%25' y='54%25' font-size='64' text-anchor='middle' fill='%23fff'%3EΔ%3C/text%3E%3C/svg%3E" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Option Trade Tracker</div>
+    <nav class="tabs" id="tabs">
+      <button data-view="dashboard" class="active">Dashboard</button>
+      <button data-view="trades">Trades</button>
+      <button data-view="add">Add Trade</button>
+      <button data-view="settings">Settings</button>
+    </nav>
+  </header>
+
+  <main id="views">
+    <!-- Dashboard -->
+    <section id="view-dashboard" class="view active">
+      <div class="kpis" id="kpis"></div>
+      <div class="card">
+        <div class="card-header">
+          <h2>Equity curve</h2>
+          <div class="toolbar">
+            <select id="equityRange">
+              <option value="all">All time</option>
+              <option value="month">Last 30 days</option>
+              <option value="week">Last 7 days</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-content">
+          <canvas id="equityCanvas" height="200"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trades -->
+    <section id="view-trades" class="view">
+      <div class="card">
+        <div class="card-header">
+          <h2>Trades</h2>
+          <div class="toolbar">
+            <button id="filterToday" class="btn">Today</button>
+            <button id="filterWeek" class="btn">This week</button>
+            <button id="filterAll" class="btn ghost">All</button>
+            <button id="exportJSON" class="btn">Export JSON</button>
+            <button id="exportCSV" class="btn">Export CSV</button>
+            <label class="btn ghost" for="importFile">Import
+              <input type="file" id="importFile" accept=".json,.csv" hidden />
+            </label>
+          </div>
+        </div>
+        <div class="card-content">
+          <div class="table-wrap">
+            <table class="grid" id="tradeTable">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Symbol</th>
+                  <th>Dir</th>
+                  <th class="right">Qty</th>
+                  <th class="right">Entry</th>
+                  <th class="right">Stop</th>
+                  <th class="right">Target</th>
+                  <th class="right">Exit</th>
+                  <th class="right">R</th>
+                  <th class="right">R:R</th>
+                  <th class="right">PnL</th>
+                  <th>Adh.</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Add Trade -->
+    <section id="view-add" class="view">
+      <div class="card">
+        <div class="card-header">
+          <h2>New trade</h2>
+        </div>
+        <div class="card-content">
+          <form id="tradeForm">
+            <div class="row">
+              <div>
+                <label>Date</label>
+                <input type="date" id="date" />
+              </div>
+              <div>
+                <label>Symbol / Instrument</label>
+                <input id="symbol" placeholder="e.g., BANKNIFTY 48000 CE" />
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label>Direction</label>
+                <select id="direction">
+                  <option>Long</option>
+                  <option>Short</option>
+                </select>
+              </div>
+              <div>
+                <label>Strike (optional)</label>
+                <input type="number" id="strike" placeholder="e.g., 48000" />
+              </div>
+            </div>
+            <div class="row-3">
+              <div>
+                <label>Entry premium</label>
+                <input type="number" id="entry" step="0.01" />
+              </div>
+              <div>
+                <label>Stop-loss premium</label>
+                <input type="number" id="stop" step="0.01" />
+              </div>
+              <div>
+                <label>Target premium</label>
+                <input type="number" id="target" step="0.01" />
+              </div>
+            </div>
+            <div class="row-3">
+              <div>
+                <label>Lots</label>
+                <input type="number" id="lots" step="1" value="1" />
+              </div>
+              <div>
+                <label>Lot size</label>
+                <input type="number" id="lotSize" step="1" value="15" />
+              </div>
+              <div>
+                <label>Exit premium (when closing)</label>
+                <input type="number" id="exit" step="0.01" />
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label>Fees per unit</label>
+                <input type="number" id="feeUnit" step="0.01" value="0" />
+                <div class="hint">Brokerage + taxes per contract</div>
+              </div>
+              <div>
+                <label>Other cost per trade</label>
+                <input type="number" id="feeTrade" step="0.01" value="0" />
+              </div>
+            </div>
+            <div>
+              <label>Notes / Emotion</label>
+              <textarea id="notes" placeholder="Kya socha, kyun liya, rule follow hua?"></textarea>
+            </div>
+
+            <div class="toolbar mt">
+              <button class="btn primary" id="addBtn" type="submit">Add trade</button>
+              <button class="btn" id="resetForm" type="button">Clear form</button>
+            </div>
+
+            <div class="live" id="liveCalc"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section id="view-settings" class="view">
+      <div class="card">
+        <div class="card-header">
+          <h2>Settings</h2>
+        </div>
+        <div class="card-content">
+          <div class="row-3">
+            <div>
+              <label>Default lot size</label>
+              <input type="number" id="s_lotSize" />
+            </div>
+            <div>
+              <label>Default fee per unit</label>
+              <input type="number" step="0.01" id="s_feeUnit" />
+            </div>
+            <div>
+              <label>Default fee per trade</label>
+              <input type="number" step="0.01" id="s_feeTrade" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Currency symbol</label>
+              <input id="s_currency" placeholder="₹" />
+            </div>
+            <div>
+              <label>Data management</label>
+              <div class="toolbar">
+                <button class="btn" id="exportJSON2">Export JSON</button>
+                <button class="btn" id="exportCSV2">Export CSV</button>
+                <label class="btn ghost" for="importFile2">Import
+                  <input type="file" id="importFile2" accept=".json,.csv" hidden />
+                </label>
+                <button class="btn warn" id="resetAll">Delete all data</button>
+              </div>
+            </div>
+          </div>
+          <div class="toolbar mt">
+            <button class="btn primary" id="saveSettings">Save settings</button>
+          </div>
+          <div class="hint mt">Settings local hain — har device pe alag save hongi.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>Data is saved locally (no login). Export regularly for backup.</div>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+      });
+    }
+  </script>
+</body>
+</html>
